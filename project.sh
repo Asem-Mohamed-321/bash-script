@@ -101,14 +101,16 @@ do
 
                                         5) echo "$db_action"
                                                 read -p "Enter the  Table name : " table_name
-                                                declare -a data_index
-                                                data_index=(1 3 5)
-                                                index=$(IFS=,; echo "${data_index[*]}") #serialization
-                                                #len_arr=${#data_index[@]}
+                                                #declare -a data_index
+                                                #data_index=(1 3 5)
+                                                echo "Enter the field numbers to print (e.g., 1 3 5):"
+                                                read -a fields
+                                                index=$(IFS=,; echo "${fields[*]}") #serialization into one string to pass it to the awk then we will split it inside of the awk
 
-                                                set -x
-                                                awk -F: 'BEGIN {printf "%s", "+";for(i=0;i<16;i++) printf "%s","-";print"+" ;print "|name|  idk  |lst|"; printf "%s", "+";for(i=0;i<16;i++) printf "%s","-";print"+" } {printf "%s", "|"; n = split("'"$index"'", index, ",") ; for (i=1;i<n;i++) printf  index[i] "|"; print"" } END{printf "%s","+" ;for(i=0;i<16;i++) printf "%s","-" ;print"+"}' "$table_name"
-                                                set +x
+
+
+                                                awk -F: -v fields="$index" 'BEGIN {printf "%s", "+";for(i=0;i<16;i++) printf "%s","-";print"+" ;print "|name|  idk  |lst|"; printf "%s", "+";for(i=0;i<16;i++) printf "%s","-";print"+" } {printf "%s", "|"; split(fields, f, ",") ; for (i in f) printf $f[i] "|"; print"" } END{printf "%s","+" ;for(i=0;i<16;i++) printf "%s","-" ;print"+"}' "$table_name"
+
                                                 ClicktoClear
                                         ;;
                                         6) echo "$db_action"
@@ -152,4 +154,4 @@ do
                         ;;
         esac
 done
-~               
+~                                                          
