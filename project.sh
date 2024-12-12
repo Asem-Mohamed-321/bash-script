@@ -49,7 +49,7 @@ do
                                         echo "8)back"
                                         echo "9)exit"
                                         read -p "Please Enter your choice: " db_action
-                                        case $db_action in
+                                        case $db_action in	#create table
                                                 1) echo "$db_action" #Create table
                                                         read -p "Enetr the name of the table: " table_name
                                                         if [[ -e $table_name ]]
@@ -57,6 +57,12 @@ do
                                                                 echo "$table_name Already Exists"
                                                         else
                                                                 touch $table_name
+								echo "Enter the fields name (e.g(name1 name2 name3)) "
+								read  -a attributes
+                                                		#split($attributes, fsplit, ",")
+								#echo $fsplit[@] > $table_name
+								echo $(IFS=:; echo "${attributes[*]}") >> $table_name
+								cat $table_name
                                                                 echo "table created successfully !!"
                                                         fi
                                                         ClicktoClear
@@ -82,7 +88,7 @@ do
                                                         fi
                                                         ClicktoClear
                                                         ;;
-                                        4) echo "$db_action"
+                                        4) echo "$db_action"     #Insert
                                                 read -p "Enter the  Table name : " table_name
 
                                                 declare -a array
@@ -99,18 +105,35 @@ do
                                                 ClicktoClear
                                                 ;;
 
-                                        5) echo "$db_action"
+                                        5) echo "$db_action" 	#Select
                                                 read -p "Enter the  Table name : " table_name
-                                                #declare -a data_index
-                                                #data_index=(1 3 5)
-                                                echo "Enter the field numbers to print (e.g., 1 3 5):"
-                                                read -a fields
-                                                index=$(IFS=,; echo "${fields[*]}") #serialization into one string to pass it to the awk then we will split it inside of the awk
+                                                #declare -a desired_fields
+						echo "Enter the fields: (e.g (name1 name2 name3) )"
+						read -a desired_fields
+						declare -a last_fields
+                                                #desired_index=$(IFS=,; echo "${desired_fields[*]}") #serialization into one string to pass it to the awk then we will split it inside of the awk
+						unset last_fields[@]
+						IFS=':' read -ra all_fields < $table_name
+						for ((i=0;i<${#desired_fields[@]};i++))
+						do
+							for ((j=0;j<${#all_fields[@]};j++)) 
+							do
+								if [[ ${desired_fields[i]} == ${all_fields[j]}  ]]
+								then
+									echo $j
+									last_fields=("${last_fields[@]}" "$(($j+1))")
+									echo ${last_fields[@]}
 
+								fi
+							done
+						done
 
+                                                #desired_fields=(1 3 5)
+                                                #echo "Enter the field numbers to print (e.g., 1 3 5):"
+                                                #read -a desired_fields
+                                                index=$(IFS=,; echo "${last_fields[*]}") #serialization into one string to pass it to the awk then we will split it inside of the awk
 
-                                                awk -F: -v fields="$index" 'BEGIN {printf "%s", "+";for(i=0;i<16;i++) printf "%s","-";print"+" ;print "|name|  idk  |lst|"; printf "%s", "+";for(i=0;i<16;i++) printf "%s","-";print"+" } {printf "%s", "|"; split(fields, f, ",") ; for (i in f) printf $f[i] "|"; print"" } END{printf "%s","+" ;for(i=0;i<16;i++) printf "%s","-" ;print"+"}' "$table_name"
-
+						awk -F: -v fields="$index" 'BEGIN {printf "%s", "+";for(i=0;i<16;i++) printf "%s","-";print"+" ;print "|name|  idk  |lst|"; printf "%s", "+";for(i=0;i<16;i++) printf "%s","-";print"+" } {printf "%s", "|"; split(fields, f, ",") ; for (i in f) printf $f[i] "|"; print"" } END{printf "%s","+" ;for(i=0;i<16;i++) printf "%s","-" ;print"+"}' "$table_name"
                                                 ClicktoClear
                                         ;;
                                         6) echo "$db_action"
