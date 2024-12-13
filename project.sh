@@ -1,25 +1,27 @@
 #! /bin/bash
 flag=true
 flag2=true
-ClicktoClear(){
-read -p "Press Enter key to continue" click
+clicktoclear(){
+read -p "press enter key to continue" click
 clear
 }
 
 while $flag
 do
-        echo "1)Create Database "
-        echo "2)List Database "
-        echo "3)Connect to Database "
-        echo "4)Drop Database "
-        echo "5)Exit"
-        read -p "Please Enter your choice: " choice
+	echo "--------------------------------------"
+        echo "1)create database "
+        echo "2)list database "
+        echo "3)connect to database "
+        echo "4)drop database "
+        echo "5)exit"
+	echo "--------------------------------------"
+        read -p "please enter your choice: " choice
         case $choice in
                 1)
                         read -p "enter the name of the database: " db_name
-                        mkdir /home/$USER/bash-project/$db_name
+                        mkdir /home/$user/bash-project/$db_name
                         echo "the db has been created"
-                        ClicktoClear
+                        clicktoclear
                         ;;
                 2) echo "choosed $choice" #lists all the dbs
                         if [ "$(ls -A)" ]
@@ -36,9 +38,9 @@ do
                         then
                                 cd /home/$USER/bash-project/$db_name
                                 clear
-                                echo "--------$db_name database-------"
                                 while $flag2
                                 do
+                                	echo "----------$db_name database-----------"
                                         echo "1)Create Table "
                                         echo "2)List Tables "
                                         echo "3)Drop Table "
@@ -48,6 +50,7 @@ do
                                         echo "7)Update Table"
                                         echo "8)back"
                                         echo "9)exit"
+					echo "--------------------------------------"
                                         read -p "Please Enter your choice: " db_action
                                         case $db_action in	#create table
                                                 1) echo "$db_action" #Create table
@@ -120,9 +123,9 @@ do
 							do
 								if [[ ${desired_fields[i]} == ${all_fields[j]}  ]]
 								then
-									echo $j
+									#echo $j #debugging
 									last_fields=("${last_fields[@]}" "$(($j+1))")
-									echo ${last_fields[@]}
+									#echo ${last_fields[@]} #debugging
 
 								fi
 							done
@@ -132,8 +135,16 @@ do
                                                 #echo "Enter the field numbers to print (e.g., 1 3 5):"
                                                 #read -a desired_fields
                                                 index=$(IFS=,; echo "${last_fields[*]}") #serialization into one string to pass it to the awk then we will split it inside of the awk
+						desired_fields_s=$(IFS=,; echo "${desired_fields[*]}")
+						#echo $desired_fields_s #for devugging
 
-						awk -F: -v fields="$index" 'BEGIN {printf "%s", "+";for(i=0;i<16;i++) printf "%s","-";print"+" ;print "|name|  idk  |lst|"; printf "%s", "+";for(i=0;i<16;i++) printf "%s","-";print"+" } {printf "%s", "|"; split(fields, f, ",") ; for (i in f) printf $f[i] "|"; print"" } END{printf "%s","+" ;for(i=0;i<16;i++) printf "%s","-" ;print"+"}' "$table_name"
+						f_count=${#desired_fields[@]}
+						 
+						
+						#set -x
+						awk -F: -v fields="$index" -v headline="$desired_fields_s" -v total_length=15 -v fields_count="$f_count" 'BEGIN {printf "%s", "+";for(j=0;j<fields_count;j++){for(i=0;i<15;i++) {printf "%s","-"};printf"+"}; print""; printf "|" ;split(headline, h, ",") ;for (i in h) {padding=total_length-length(h[i]);right=int(padding/2);left=padding-right; printf "%*s%s%*s|",left, "", h[i],right,"" };print""; printf "%s", "+"; for(j=0;j<fields_count;j++){for(i=0;i<15;i++) {printf "%s","-"};printf"+"}; print""} {if(NR != 1){printf "%s", "|"; split(fields, f, ",") ; for (i in f) {padding=total_length-length($f[i]);right=int(padding/2);left=padding-right; printf "%*s%s%*s|",left, "", $f[i],right,"" } ; print"" }} END{printf "%s","+" ;for(j=0;j<fields_count;j++){for(i=0;i<15;i++) {printf "%s","-"};printf"+"}; print""}' "$table_name"
+	
+						#set +x
                                                 ClicktoClear
                                         ;;
                                         6) echo "$db_action"
