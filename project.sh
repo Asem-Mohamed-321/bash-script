@@ -1,7 +1,7 @@
 #! /bin/bash
 flag=true
 flag2=true
-clicktoclear(){
+ClicktoClear(){
 read -p "press enter key to continue" click
 clear
 }
@@ -21,7 +21,7 @@ do
                         read -p "enter the name of the database: " db_name
                         mkdir /home/$user/bash-project/$db_name
                         echo "the db has been created"
-                        clicktoclear
+                        ClicktoClear
                         ;;
                 2) echo "choosed $choice" #lists all the dbs
                         if [ "$(ls -A)" ]
@@ -80,8 +80,7 @@ do
                                                 ClicktoClear
                                                 ;;
                                         3) echo "$db_action" #drop table
-
-                                                        read -p "Enetr the name of the table: " table_name
+                                                        read -p "Enter the name of the table: " table_name
                                                         if [[ -e $table_name ]]
                                                         then
                                                                 rm $table_name
@@ -93,20 +92,23 @@ do
                                                         ;;
                                         4) echo "$db_action"     #Insert
                                                 read -p "Enter the  Table name : " table_name
-
-                                                declare -a array
-                                                unset array[@]
-                                                read -p "enter the element no 1)" array[0]
-
-                                                for ((i=1;i<5;i++))
-                                                do
-                                                        read -p "enter the element no $(($i+1))" element
-                                                        array=("${array[@]}"":$element")
-
-                                                done
-                                                echo "${array[@]}" >> $table_name
-                                                ClicktoClear
-                                                ;;
+                                                if [[ -e $table_name ]]
+                                                then
+							declare -a array
+                                                	unset array[@]
+                                                	IFS=':' read -ra all_fields < $table_name
+							read -p "enter the ${all_fields[0]} )" array[0]
+                           	               		for ((i=1;i<${#all_fields[@]};i++))
+                                	                do
+								read -p "enter the  ${all_fields[i]} )" element
+                                                	        array=("${array[@]}"":$element")
+        	                                        done
+                	                                echo "${array[@]}" >> $table_name
+						else
+							echo "Table doesn't exist (create table first)"
+						fi
+                        	                ClicktoClear
+                                	                ;;
 
                                         5) echo "$db_action" 	#Select
                                                 read -p "Enter the  Table name : " table_name
