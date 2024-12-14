@@ -87,10 +87,8 @@ do
 
 								done
 								echo $(IFS=:; echo "${att[*]}") >> $table_name
+								echo $(IFS=:; echo "${const[*]}") > constraints_files/$table_name
 								echo $(IFS=:; echo "${att[*]}") >> constraints_files/$table_name
-								echo $(IFS=:; echo "${const[*]}") >> constraints_files/$table_name
-
-								cat $table_name
 								cat constraints_files/$table_name
                                                                 echo "table created successfully !!"
                                                         fi
@@ -110,6 +108,7 @@ do
                                                         if [[ -e $table_name ]]
                                                         then
                                                                 rm $table_name
+								rm constraints_files/$table_name
                                                                 echo "$table_name has been deleted"
                                                         else
                                                                 echo "$table_name not found"
@@ -122,7 +121,12 @@ do
                                                 then
 							declare -a array
                                                 	unset array[@]
+							unset const
                                                 	IFS=':' read -ra all_fields < $table_name 	#read attributes from file
+                                                	#temp=`tail -n 1 constraints_files/$table_name`
+                                                	IFS=':' read -ra const < constraints_files/$table_name 	#read attributes from file
+							#IFS=':' read -ra const < $temp #read attributes from file
+							echo ${const[@]}
 							read -p "enter the ${all_fields[0]} )" array[0]
                            	               		for ((i=1;i<${#all_fields[@]};i++))
                                 	                do
