@@ -127,13 +127,69 @@ do
                                                 	IFS=':' read -ra const < constraints_files/$table_name 	#read attributes from file
 							#IFS=':' read -ra const < $temp #read attributes from file
 							echo ${const[@]}
-							read -p "enter the ${all_fields[0]} )" array[0]
-                           	               		for ((i=1;i<${#all_fields[@]};i++))
+							#read -p "enter the ${all_fields[0]} )" array[0]
+							#set -x
+                           	               		for ((i=0;i<${#all_fields[@]};i++))
                                 	                do
 								read -p "enter the  ${all_fields[i]} )" element
-                                                	        array=("${array[@]}"":$element")
-        	                                        done
-                	                                echo "${array[@]}" >> $table_name
+								if [[ ${const[$i]} == "int" ]]
+								then
+									#case $element in 
+									#	*([[:alnum:]]) ) echo "Number"
+									#		;;
+									#		
+									#	*) echo "wrong input data type"
+									#		break
+									#		;;
+									#esac
+									if [[ $element =~ ^[0-9]+$ ]]
+									then
+										echo "Number"
+									else
+										break
+									fi
+								elif  [[ ${const[$i]} == "char" ]]
+								then
+									if [[ $element =~ ^[0-9]*\.?[0-9]+$ ]]
+                                                                        then
+                                                                                break
+                                                                        else
+                                                                                echo "alpha"
+                                                                        fi
+								elif [[ ${const[$i]} == "float" ]]
+                                                                then
+                                                                        if [[ $element =~ ^[0-9]*\.?[0-9]+$ ]]
+                                                                        then
+                                                                                echo "float"
+                                                                        else
+                                                                                break 
+									fi
+ 
+
+									#case $element in 
+                                                                        #*([[:alpha:]]) ) echo "alpha"
+									#	;;
+									#
+									#*) echo "wrong input data type"
+									#	break
+									#	;;
+									#esac
+								fi
+								#array=("${array[@]}"":$element")
+        	                                        
+								array[$i]=$element
+							done
+
+							#set +x
+							
+							if [[ ${#array[@]} -eq ${#all_fields[@]} ]]
+							then
+
+                	                                	array_a=$(IFS=:; echo "${array[*]}")
+								echo "${array_a[@]}" >> $table_name
+							else
+								echo "couldn't insert"
+							fi
 						else
 							echo "Table doesn't exist (create table first)"
 						fi
