@@ -19,8 +19,9 @@ do
         case $choice in
                 1)
                         read -p "enter the name of the database: " db_name
-                        mkdir /home/$user/bash-project/$db_name
-                        echo "the db has been created"
+                        mkdir /home/$USER/bash-project/$db_name
+                        mkdir /home/$USER/bash-project/$db_name/constraints_files
+			echo "the db has been created"
                         ClicktoClear
                         ;;
                 2) echo "choosed $choice" #lists all the dbs
@@ -60,20 +61,45 @@ do
                                                                 echo "$table_name Already Exists"
                                                         else
                                                                 touch $table_name
-								echo "Enter the fields name (e.g(name1 name2 name3)) "
-								read  -a attributes
+								#echo "Enter the fields name (e.g(name1 name2 name3)) "
+								#read  -a attributes
                                                 		#split($attributes, fsplit, ",")
 								#echo $fsplit[@] > $table_name
-								echo $(IFS=:; echo "${attributes[*]}") >> $table_name
+								#echo $(IFS=:; echo "${attributes[*]}") >> $table_name
+								#constraints
+								declare -a const	#constraints
+								declare -a att		#attributes
+								unset const
+								unset att
+								#const[0]=$table_name
+								esc="y"
+								#typeset -i i=0
+								i=0
+								while [[ $esc == "y" ]]
+								do
+									echo "Enter the attribute name: "
+									read att[$i]
+									echo "Enter the corresponding constraint:"
+									read const[$i]
+									echo "do you wan to add more fields(y/n): "
+									read esc
+									((i++))
+
+								done
+								echo $(IFS=:; echo "${att[*]}") >> $table_name
+								echo $(IFS=:; echo "${att[*]}") >> constraints_files/$table_name
+								echo $(IFS=:; echo "${const[*]}") >> constraints_files/$table_name
+
 								cat $table_name
+								cat constraints_files/$table_name
                                                                 echo "table created successfully !!"
                                                         fi
                                                         ClicktoClear
                                                 ;;
                                         2) echo "$db_action" #list table
-                                                if [ "$(ls -A )" ]
+                                                if [ "$( ls -p | egrep -v /$ )" ]
                                                 then
-                                                        ls
+                                                       	ls -p | egrep -v /$
                                                 else
                                                         echo "There are no tables in this DataBase"
                                                 fi
@@ -96,7 +122,7 @@ do
                                                 then
 							declare -a array
                                                 	unset array[@]
-                                                	IFS=':' read -ra all_fields < $table_name
+                                                	IFS=':' read -ra all_fields < $table_name 	#read attributes from file
 							read -p "enter the ${all_fields[0]} )" array[0]
                            	               		for ((i=1;i<${#all_fields[@]};i++))
                                 	                do
