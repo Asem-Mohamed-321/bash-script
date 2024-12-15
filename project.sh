@@ -207,6 +207,7 @@ do
 						IFS=':' read -ra all_fields < $table_name
 						for ((i=0;i<${#desired_fields[@]};i++))
 						do
+							found=false
 							for ((j=0;j<${#all_fields[@]};j++)) 
 							do
 								if [[ ${desired_fields[i]} == ${all_fields[j]}  ]]
@@ -214,25 +215,36 @@ do
 									#echo $j #debugging
 									last_fields=("${last_fields[@]}" "$(($j+1))")
 									#echo ${last_fields[@]} #debugging
-
+									found=true
 								fi
 							done
+								if [[ $found == false ]]
+								then
+									echo "${desired_fields[i]} not found"
+									break 
+
+								fi
 						done
 
-                                                #desired_fields=(1 3 5)
-                                                #echo "Enter the field numbers to print (e.g., 1 3 5):"
-                                                #read -a desired_fields
-                                                index=$(IFS=,; echo "${last_fields[*]}") #serialization into one string to pass it to the awk then we will split it inside of the awk
-						desired_fields_s=$(IFS=,; echo "${desired_fields[*]}")
-						#echo $desired_fields_s #for devugging
+						if [[ $found == true ]]
+						then
+							#desired_fields=(1 3 5)
+                                                	#echo "Enter the field numbers to print (e.g., 1 3 5):"
+                                                	#read -a desired_fields
+                                                	index=$(IFS=,; echo "${last_fields[*]}") #serialization into one string to pass it to the awk then we will split it inside of the awk
+                                                	desired_fields_s=$(IFS=,; echo "${desired_fields[*]}")
+                                                	#echo $desired_fields_s #for devugging
 
-						f_count=${#desired_fields[@]}
-						 
-						
-						#set -x
-						awk -F: -v fields="$index" -v headline="$desired_fields_s" -v total_length=15 -v fields_count="$f_count" 'BEGIN {printf "%s", "+";for(j=0;j<fields_count;j++){for(i=0;i<15;i++) {printf "%s","-"};printf"+"}; print""; printf "|" ;split(headline, h, ",") ;for (i in h) {padding=total_length-length(h[i]);right=int(padding/2);left=padding-right; printf "%*s%s%*s|",left, "", h[i],right,"" };print""; printf "%s", "+"; for(j=0;j<fields_count;j++){for(i=0;i<15;i++) {printf "%s","-"};printf"+"}; print""} {if(NR != 1){printf "%s", "|"; split(fields, f, ",") ; for (i in f) {padding=total_length-length($f[i]);right=int(padding/2);left=padding-right; printf "%*s%s%*s|",left, "", $f[i],right,"" } ; print"" }} END{printf "%s","+" ;for(j=0;j<fields_count;j++){for(i=0;i<15;i++) {printf "%s","-"};printf"+"}; print""}' "$table_name"
-	
-						#set +x
+                                                	f_count=${#desired_fields[@]}
+
+
+                                                	#set -x
+                                                	awk -F: -v fields="$index" -v headline="$desired_fields_s" -v total_length=15 -v fields_count="$f_count" 'BEGIN {printf "%s", "+";for(j=0;j<fields_count;j++){for(i=0;i<15;i++) {printf "%s","-"};printf"+"}; print""; printf "|" ;split(headline, h, ",") ;for (i in h) {padding=total_length-length(h[i]);right=int(padding/2);left=padding-right; printf "%*s%s%*s|",left, "", h[i],right,"" };print""; printf "%s", "+"; for(j=0;j<fields_count;j++){for(i=0;i<15;i++) {printf "%s","-"};printf"+"}; print""} {if(NR != 1){printf "%s", "|"; split(fields, f, ",") ; for (i in f) {padding=total_length-length($f[i]);right=int(padding/2);left=padding-right; printf "%*s%s%*s|",left, "", $f[i],right,"" } ; print"" }} END{printf "%s","+" ;for(j=0;j<fields_count;j++){for(i=0;i<15;i++) {printf "%s","-"};printf"+"}; print""}' "$table_name"
+
+                                                	#set +x
+
+
+						fi
                                                 ClicktoClear
                                         ;;
                                         6) echo "$db_action"
