@@ -203,6 +203,7 @@ do
 						read -a desired_fields
 						declare -a last_fields
                                                 #desired_index=$(IFS=,; echo "${desired_fields[*]}") #serialization into one string to pass it to the awk then we will split it inside of the awk
+
 						unset last_fields[@]
 						IFS=':' read -ra all_fields < $table_name
 						for ((i=0;i<${#desired_fields[@]};i++))
@@ -228,18 +229,59 @@ do
 
 						if [[ $found == true ]]
 						then
+
 							#desired_fields=(1 3 5)
                                                 	#echo "Enter the field numbers to print (e.g., 1 3 5):"
                                                 	#read -a desired_fields
-                                                	index=$(IFS=,; echo "${last_fields[*]}") #serialization into one string to pass it to the awk then we will split it inside of the awk
+							declare condition_arr
+							unset condition_arr
+							condition=""
+							echo "Enter the condition (e.g., salary > 5000):"
+                                                        read -a condition_arr
+							condition_flag=false
+							if [[ ${#condition_arr[@]} -ne 0  ]]
+                            		                then
+								for ((j=0;j<${#all_fields[@]};j++))
+                                                       		do
+                                                                	if [[ ${condition_arr[0]} == ${all_fields[$j]} ]]
+                                                                        then
+										condition=(($j+1))
+										condition_flag=true
+                                                                        fi
+                                                        	done
+								if [[ $condition_flag == false ]]
+                                                                then
+                                                                        echo "${condition_arr[0]} not found in table"
+                                                                        #break
+                                                                fi
+								echo "$condition  ${condition_arr[@]}"
+							else
+								echo "condition_arr is empty"
+                                                        	#condition_flag=false	
+                                               		fi
+
+							#for ((j=0;j<${#all_fields[@]};j++))
+                                                        #do
+								#if $condition_arr
+                                                                #then
+                                                                        #if [[ ${condition_arr[0]} == ${all_fields[$j]} ]]
+									#then
+										#condition=$j
+									#fi
+								#fi
+                                                        #done
+
+
+							
+							index=$(IFS=,; echo "${last_fields[*]}") #serialization into one string to pass it to the awk then we will split it inside of the awk
                                                 	desired_fields_s=$(IFS=,; echo "${desired_fields[*]}")
-                                                	#echo $desired_fields_s #for devugging
-
+                                                	#echo $desired_fields_s #for debugging
                                                 	f_count=${#desired_fields[@]}
-
-
                                                 	#set -x
-                                                	awk -F: -v fields="$index" -v headline="$desired_fields_s" -v total_length=15 -v fields_count="$f_count" 'BEGIN {printf "%s", "+";for(j=0;j<fields_count;j++){for(i=0;i<15;i++) {printf "%s","-"};printf"+"}; print""; printf "|" ;split(headline, h, ",") ;for (i in h) {padding=total_length-length(h[i]);right=int(padding/2);left=padding-right; printf "%*s%s%*s|",left, "", h[i],right,"" };print""; printf "%s", "+"; for(j=0;j<fields_count;j++){for(i=0;i<15;i++) {printf "%s","-"};printf"+"}; print""} {if(NR != 1){printf "%s", "|"; split(fields, f, ",") ; for (i in f) {padding=total_length-length($f[i]);right=int(padding/2);left=padding-right; printf "%*s%s%*s|",left, "", $f[i],right,"" } ; print"" }} END{printf "%s","+" ;for(j=0;j<fields_count;j++){for(i=0;i<15;i++) {printf "%s","-"};printf"+"}; print""}' "$table_name"
+							condition_f="$condition ${condition[1]} ${condition[2]}"
+
+
+                                                	awk -F: -v fields="$index" -v headline="$desired_fields_s" -v total_length=15 -v fields_count="$f_count" 'BEGIN {printf "%s", "+";for(j=0;j<fields_count;j++){for(i=0;i<15;i++) {printf "%s","-"};printf"+"}; print""; printf "|" ;split(headline, h, ",") ;for (i in h) {padding=total_length-length(h[i]);right=int(padding/2);left=padding-right; printf "%*s%s%*s|",left, "", h[i],right,"" };print""; printf "%s", "+"; for(j=0;j<fields_count;j++){for(i=0;i<15;i++) {printf "%s","-"};printf"+"}; print""} {if(NR != 1 && $condition_f){printf "%s", "|"; split(fields, f, ",") ; for (i in f) {padding=total_length-length($f[i]);right=int(padding/2);left=padding-right; printf "%*s%s%*s|",left, "", $f[i],right,"" } ; print"" }} END{printf "%s","+" ;for(j=0;j<fields_count;j++){for(i=0;i<15;i++) {printf "%s","-"};printf"+"}; print""}' "$table_name"
 
                                                 	#set +x
 
