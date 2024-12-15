@@ -245,7 +245,7 @@ do
                                                        		do
                                                                 	if [[ ${condition_arr[0]} == ${all_fields[$j]} ]]
                                                                         then
-										condition=(($j+1))
+										condition=$(($j+1))
 										condition_flag=true
                                                                         fi
                                                         	done
@@ -259,6 +259,10 @@ do
 								echo "condition_arr is empty"
                                                         	#condition_flag=false	
                                                		fi
+							if [[ ${condition_arr[1]} == "=" ]]
+							then
+								condition_arr[1]="=="
+							fi
 
 							#for ((j=0;j<${#all_fields[@]};j++))
                                                         #do
@@ -278,20 +282,18 @@ do
                                                 	#echo $desired_fields_s #for debugging
                                                 	f_count=${#desired_fields[@]}
                                                 	#set -x
-							condition_f="$condition ${condition[1]} ${condition[2]}"
-
-
-                                                	awk -F: -v fields="$index" -v headline="$desired_fields_s" -v total_length=15 -v fields_count="$f_count" 'BEGIN {printf "%s", "+";for(j=0;j<fields_count;j++){for(i=0;i<15;i++) {printf "%s","-"};printf"+"}; print""; printf "|" ;split(headline, h, ",") ;for (i in h) {padding=total_length-length(h[i]);right=int(padding/2);left=padding-right; printf "%*s%s%*s|",left, "", h[i],right,"" };print""; printf "%s", "+"; for(j=0;j<fields_count;j++){for(i=0;i<15;i++) {printf "%s","-"};printf"+"}; print""} {if(NR != 1 && $condition_f){printf "%s", "|"; split(fields, f, ",") ; for (i in f) {padding=total_length-length($f[i]);right=int(padding/2);left=padding-right; printf "%*s%s%*s|",left, "", $f[i],right,"" } ; print"" }} END{printf "%s","+" ;for(j=0;j<fields_count;j++){for(i=0;i<15;i++) {printf "%s","-"};printf"+"}; print""}' "$table_name"
-
+							condition_f="\$$condition ${condition_arr[1]} ${condition_arr[2]}"
+							echo $condition_f
+							awk -F: -v fields="$index" -v headline="$desired_fields_s" -v total_length=15 -v fields_count="$f_count" 'BEGIN {printf "%s", "+";for(j=0;j<fields_count;j++){for(i=0;i<15;i++) {printf "%s","-"};printf"+"}; print""; printf "|" ;split(headline, h, ",") ;for (i in h) {padding=total_length-length(h[i]);right=int(padding/2);left=padding-right; printf "%*s%s%*s|",left, "", h[i],right,"" };print""; printf "%s", "+"; for(j=0;j<fields_count;j++){for(i=0;i<15;i++) {printf "%s","-"};printf"+"}; print""} { if ( NR != 1 && '"$condition_f"' ) { printf "%s", "|"; split(fields, f, ",") ; for (i in f) {padding=total_length-length($f[i]);right=int(padding/2);left=padding-right; printf "%*s%s%*s|",left, "", $f[i],right,"" } ; print"" } }  END{printf "%s","+" ;for(j=0;j<fields_count;j++){for(i=0;i<15;i++) {printf "%s","-"};printf"+"}; print""}' "$table_name" 
                                                 	#set +x
 
 
 						fi
                                                 ClicktoClear
                                         ;;
-                                        6) echo "$db_action"
+                                        6) echo "$db_action"	#delete
                                                 ;;
-                                        7) echo "$db_action"
+                                        7) echo "$db_action"	#update
                                                 ;;
                                         8)
                                                 cd -
