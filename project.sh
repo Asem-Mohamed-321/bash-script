@@ -372,14 +372,13 @@ do
 						read -a desired_fields
 						echo "Enter the value you want to set : "
 						read value
-
-
+					
 						
 						declare -a last_fields
 						unset last_fields[@] #the column numbers which will be passed to the awk
 						unset all_fileds[@]
 						IFS=':' read -ra all_fields < $table_name
-						if [[ ${#desired_fields[@]} -eq 0 || "${desired_fields[0]}" == '*' ]]  #view the whole table if he entered nothing or "*"
+						if [[ ${#desired_fields[@]} -eq 0 || "${desired_fields[0]}" == '*' ]]  #update the whole table if he entered nothing or "*"
 						then
 							for((i=0;i<${#all_fields[@]};i++))
 							do
@@ -413,11 +412,52 @@ do
 
 						
 						fi
+						
+						declare -a const
+						unset const
+                                                IFS=':' read -ra const < constraints_files/$table_name 	#read attributes from file
+						right_datatype=true
+						echo $last_fields
+						echo $const[@]
+						echo ${const[(($last_fields-1))]}
+
+						if [[ ${const[(($last_fields-1))]} == "int" ]]
+						then
+								if [[ $value =~ ^[0-9]+$ ]]
+								then
+									echo "Number"
+								else
+									echo "wrong data type of the column"
+									right_datatype=false
+								fi
+						elif  [[ ${const[(($last_fields-1))]} == "char" ]]
+						then
+								if [[ $value =~ ^[0-9]*\.?[0-9]+$ ]]
+                                                                then
+									echo "wrong data type of the column"
+                                                                        
+									right_datatype=false
+                                                                else
+                                                                        echo "alpha"
+                                                		fi
+						elif [[ ${const[(($last_fields-1))]} == "float" ]]
+                                                then
+                                                                if [[ $value =~ ^[0-9]*\.?[0-9]+$ ]]
+                                                                then
+                                                                        echo "float"
+                                                                else
+									echo "wrong data type of the column"
+									right_datatype=false
+                                                                        
+								fi
+ 
+						fi
+
 
 						set +f #re-enabling globing
 
 
-						if [[ $found == true ]]
+						if [[ $found == true && $right_datatype == true ]]
 						then
 
                                                 	condition=""
