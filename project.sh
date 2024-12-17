@@ -365,6 +365,107 @@ do
 
                                                 ;;
                                         7) echo "$db_action"	#update
+						read -p "Enter the  Table name : " table_name
+						unset desired_fields
+						set -f #this line disable "globing" which will allow the use to input the character "*" without converting it 
+						echo "Enter the field: (e.g (name1 name2 name3) )"
+						read -a desired_fields
+						echo "Enter the value you want to set : "
+						read value
+
+
+						
+						declare -a last_fields
+						unset last_fields[@] #the column numbers which will be passed to the awk
+						unset all_fileds[@]
+						IFS=':' read -ra all_fields < $table_name
+						if [[ ${#desired_fields[@]} -eq 0 || "${desired_fields[0]}" == '*' ]]  #view the whole table if he entered nothing or "*"
+						then
+							for((i=0;i<${#all_fields[@]};i++))
+							do
+								last_fields=("${last_fields[@]}" "$(($i+1))")
+								IFS=':' read -ra desired_fields < $table_name
+
+							done
+							found=true
+
+						else       # for specifing some of the columns
+							for ((i=0;i<${#desired_fields[@]};i++))
+                                                	do
+                                                        	found=false
+                                                        	for ((j=0;j<${#all_fields[@]};j++))
+                                                        	do
+                                                                	if [[ ${desired_fields[i]} == ${all_fields[j]}  ]]
+                                                                	then
+                                                                        	#echo $j #debugging
+                                                                        	last_fields=("${last_fields[@]}" "$(($j+1))")
+                                                                        	#echo ${last_fields[@]} #debugging
+                                                                        	found=true
+                                                                	fi
+                                                        	done
+                                                                	if [[ $found == false ]]
+                                                                	then
+                                                                        	echo "${desired_fields[i]} not found "
+                                                                        	break
+		
+                                                            		fi
+                                                	done
+
+						
+						fi
+
+						set +f #re-enabling globing
+
+
+						if [[ $found == true ]]
+						then
+
+                                                	condition=""
+                                                	declare condition_arr
+                                                	unset condition_arr
+
+                                                	echo "Enter the condition (e.g., salary >= 5000):"
+                                                	read -a condition_arr
+                                                	condition_flag=false
+
+                                                	unset all_fileds[@]
+                                                	IFS=':' read -ra all_fields < $table_name
+
+                                                	if [[ ${#condition_arr[@]} -ne 0  ]]
+                                                	then
+                                                        	for ((j=0;j<${#all_fields[@]};j++))
+                                                        	do
+                                                                	if [[ ${condition_arr[0]} == ${all_fields[$j]} ]]
+                                                                	then
+                                                                        	condition=$(($j+1))
+                                                                        	condition_flag=true
+                                                                	fi
+                                                        	done
+                                                        	if [[ $condition_flag == false ]]
+                                                        	then
+                                                                	echo "${condition_arr[0]} not found in table"
+
+                                                        	fi
+                                                                	echo "$condition  ${condition_arr[@]}"
+                                                        	if [[ ${condition_arr[1]} == "=" ]]
+                                                        	then
+                                                                	condition_arr[1]="=="
+                                                        	fi
+							else
+                                                        	echo "condition_arr is empty"
+                                                        	#condition_flag=false
+                                                	fi
+                                                	condition_f="\$$condition ${condition_arr[1]} ${condition_arr[2]}"
+									
+							index=$(IFS=,; echo "${last_fields[*]}") #serialization into one string to pass it to the awk then we will split it inside of the awk
+                                                	desired_fields_s=$(IFS=,; echo "${desired_fields[*]}")
+                                                	#echo $desired_fields_s #for debugging
+
+
+							awk -F: '{if (NR==1) print$0 ; if(NR!=1 && '"$condition_f"') {OFS=FS; $'"$last_fields"'="'"$value"'" ;print$0 } else if(NR!=1) {print $0}}' $table_name  > temp && mv temp  $table_name
+						fi
+
+
                                                 ;;
                                         8)
                                                 cd -
