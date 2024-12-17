@@ -69,6 +69,8 @@ do
 								#constraints
 								declare -a const	#constraints
 								declare -a att		#attributes
+								declare -a pk_arr	#Primary key 
+								unset pk_arr
 								unset const
 								unset att
 								#const[0]=$table_name
@@ -84,11 +86,23 @@ do
 									echo "do you wan to add more fields(y/n): "
 									read esc
 									((i++))
-
 								done
+								pk_arr="PK"
+								read -p "Enter the Primary key attribute name: " pk_name
+								for ((i=0;i<${#att[@]};i++))
+								do
+									if [[ $pk_name == ${att[$i]} ]]
+									then
+										pk_arr[1]=${att[$i]}
+										pk_arr[2]=$i
+									fi
+								done
+								echo
+
 								echo $(IFS=:; echo "${att[*]}") >> $table_name
 								echo $(IFS=:; echo "${const[*]}") > constraints_files/$table_name
 								echo $(IFS=:; echo "${att[*]}") >> constraints_files/$table_name
+								echo $(IFS=:; echo "${pk_arr[*]}") >> constraints_files/$table_name
 								cat constraints_files/$table_name
                                                                 echo "table created successfully !!"
                                                         fi
@@ -120,8 +134,18 @@ do
                                                 if [[ -e $table_name ]]
                                                 then
 							declare -a array
+							declare -a pktmp
+							declare -a  pk_arr
+							unset pk_arr
+							unset pk_tmp
                                                 	unset array[@]
 							unset const
+							pk_tmp=(`grep "^PK" constraints_files/$table_name`)
+							echo ${pk_tmp[@]}
+							IFS=':' read -ra pk_arr <<< ${pk_tmp[@]}
+							echo ${pk_arr[@]}
+							
+
                                                 	IFS=':' read -ra all_fields < $table_name 	#read attributes from file
                                                 	#temp=`tail -n 1 constraints_files/$table_name`
                                                 	IFS=':' read -ra const < constraints_files/$table_name 	#read attributes from file
@@ -129,6 +153,14 @@ do
 							echo ${const[@]}
 							#read -p "enter the ${all_fields[0]} )" array[0]
 							#set -x
+							#pk_flag=true
+							#while $pk_flag
+								#read -p "Enter ${pk_arr[1]}(primary key):  "
+							#do
+
+
+							#done
+
                            	               		for ((i=0;i<${#all_fields[@]};i++))
                                 	                do
 								read -p "enter the  ${all_fields[i]} )" element
@@ -142,7 +174,7 @@ do
 									#		break
 									#		;;
 									#esac
-									if [[ $element =~ ^[0-9]+$ ]]
+									if [[ $element =~ ^[0-9]+$ || $element == "" ]]
 									then
 										echo "Number"
 									else
@@ -158,7 +190,7 @@ do
                                                                         fi
 								elif [[ ${const[$i]} == "float" ]]
                                                                 then
-                                                                        if [[ $element =~ ^[0-9]*\.?[0-9]+$ ]]
+                                                                        if [[ $element =~ ^[0-9]*\.?[0-9]+$ || $element == "" ]]
                                                                         then
                                                                                 echo "float"
                                                                         else
@@ -176,8 +208,19 @@ do
 									#esac
 								fi
 								#array=("${array[@]}"":$element")
-        	                                        
-								array[$i]=$element
+        	                                       		if [[ ${all_fields[i]} == ${pk_arr[1]} ]]
+								then
+									if [[ $element == "" ]]
+									then
+										echo "didin't enter the primary key ${pk_arr[1]}"
+										break
+									else
+										array[$i]=$element
+									fi
+								else
+									array[$i]=$element
+								fi	
+								#array[$i]=$element
 							done
 
 							#set +x
