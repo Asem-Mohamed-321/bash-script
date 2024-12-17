@@ -215,7 +215,14 @@ do
 										echo "didin't enter the primary key ${pk_arr[1]}"
 										break
 									else
+										cut -d: -f${pk_arr[2]} $table_name | grep -q "$element"
+										if [[ $? -ne 0 ]]
+										then
+											echo "id( primary key ) already exists"
+											break
+										else
 										array[$i]=$element
+										fi
 									fi
 								else
 									array[$i]=$element
