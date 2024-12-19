@@ -225,13 +225,18 @@ do
                                 	                ;;
 
                                         "5) Select from Table") echo "$db_action" 	#Select
-                                                read -p "Enter the  Table name : " table_name
+						table_name=$(zenity --entry --title="Select From Table" --text="Enter the table name :")
+                                                #read -p "Enter the  Table name : " table_name
                                                 #declare -a desired_fields
+						if [[ -e $table_name ]]
+						then
 
 						unset desired_fields
 						set -f #this line disable "globing" which will allow the use to input the character "*" without converting it 
-						echo "Enter the fields: (e.g (name1 name2 name3) )"
-						read -a desired_fields
+						desired_fields=$(zenity --entry --title="Insert Into Table" --text="enter the fields : \nthe format should be (name1 name2 name3)")
+						#echo "Enter the fields: (e.g (name1 name2 name3) )"
+						IFS=" " read -ra desired_fields <<< "$desired_fields"
+						#read -a desired_fields
 
 
 						
@@ -266,7 +271,7 @@ do
                                                         	done
                                                                 	if [[ $found == false ]]
                                                                 	then
-                                                                        	echo "${desired_fields[i]} not found "
+                                                                        	zenity --error --text="${desired_fields[i]} not found "
                                                                         	break
 		
                                                             		fi
@@ -288,8 +293,11 @@ do
 							declare condition_arr
 							unset condition_arr
 							condition=""
-							echo "Enter the condition (e.g., salary > 5000):"
-                                                        read -a condition_arr
+							condition_arr=$(zenity --entry --title="Select From Table" --text="Enter the condition : \nthe format shoulc be (e.g., salary > 5000) ")
+
+							#echo "Enter the condition (e.g., salary > 5000):"
+                                                        #read -a condition_arr
+							IFS=" " read -ra condition_arr <<< "$condition_arr"
 							condition_flag=false
 							if [[ ${#condition_arr[@]} -ne 0  ]]
                             		                then
@@ -304,7 +312,7 @@ do
                                                         	done
 								if [[ $condition_flag == false ]]
                                                                 then
-                                                                        echo "${condition_arr[0]} not found in table"
+                                                                        zenity --error --text= "${condition_arr[0]} not found in table"
                                                                         #break
                                                                 fi
 								
@@ -315,7 +323,7 @@ do
 								fi
 
 							else
-								echo "condition_arr is empty"
+							#	zenity --error --text="condition_arr is empty"
                                                         	#condition_flag=false
 								condition=0
 									
@@ -341,12 +349,16 @@ do
                                                 	#set -x
 							condition_f="\$$condition ${condition_arr[1]} ${condition_arr[2]}"
 							echo $condition_f
-							awk -F: -v fields="$index" -v headline="$desired_fields_s" -v total_length=15 -v fields_count="$f_count" 'BEGIN {printf "%s", "+";for(j=0;j<fields_count;j++){for(i=0;i<15;i++) {printf "%s","-"};printf"+"}; print""; printf "|" ;split(headline, h, ",") ;for (i in h) {padding=total_length-length(h[i]);right=int(padding/2);left=padding-right; printf "%*s%s%*s|",left, "", h[i],right,"" };print""; printf "%s", "+"; for(j=0;j<fields_count;j++){for(i=0;i<15;i++) {printf "%s","-"};printf"+"}; print""} { if ( NR != 1 && '"$condition_f"' ) { printf "%s", "|"; split(fields, f, ",") ; for (i in f) {padding=total_length-length($f[i]);right=int(padding/2);left=padding-right; printf "%*s%s%*s|",left, "", $f[i],right,"" } ; print"" } }  END{printf "%s","+" ;for(j=0;j<fields_count;j++){for(i=0;i<15;i++) {printf "%s","-"};printf"+"}; print""}' "$table_name" 
+							zenity --info   --title="Select From Table" --text="<tt>`awk -F: -v fields="$index" -v headline="$desired_fields_s" -v total_length=15 -v fields_count="$f_count" 'BEGIN {printf "%s", "+";for(j=0;j<fields_count;j++){for(i=0;i<15;i++) {printf "%s","-"};printf"+"}; print""; printf "|" ;split(headline, h, ",") ;for (i in h) {padding=total_length-length(h[i]);right=int(padding/2);left=padding-right; printf "%*s%s%*s|",left, "", h[i],right,"" };print""; printf "%s", "+"; for(j=0;j<fields_count;j++){for(i=0;i<15;i++) {printf "%s","-"};printf"+"}; print""} { if ( NR != 1 && '"$condition_f"' ) { printf "%s", "|"; split(fields, f, ",") ; for (i in f) {padding=total_length-length($f[i]);right=int(padding/2);left=padding-right; printf "%*s%s%*s|",left, "", $f[i],right,"" } ; print"" } }  END{printf "%s","+" ;for(j=0;j<fields_count;j++){for(i=0;i<15;i++) {printf "%s","-"};printf"+"}; print""}' "$table_name" `</tt>" 
                                                 	#set +x
 
 
 						fi
-                                                ClicktoClear
+					else
+						zenity --error --text="$table_name doesn't exist"
+					fi
+
+                                                #ClicktoClear
                                         ;;
                                         "6) Delee from Table") echo "$db_action"	#delete
 
