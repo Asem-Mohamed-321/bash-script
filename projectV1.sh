@@ -340,40 +340,39 @@ do
 											    	awk -F: '{if (NR==1) print$0 ; if(NR!=1 && !('"$condition_f"')) print$0 }' $table_name  > temp && mv temp  $table_name 
                 					            fi
                                                 ;;
-                                        7) echo "$db_action"	#update
-												read -p "Enter the  Table name : " table_name
-                                                if [[ ! -e $table_name ]]
-                                                then
+                                        7) 	#update table 
+						read -p "Enter the  Table name : " table_name		#reads the name of the table you want to update
+                                                if [[ ! -e $table_name ]]		#checks if the table exists in the database
+                                                then	
                                                 echo "table doesn't exist !!"
                                                 else
-											    	unset desired_fields
+											    	unset desired_fields		
 											    	unset value
-											    	set -f #this line disable "globing" which will allow the use to input the character "*" without converting it 
-											    	echo "Enter the field: (e.g (name1 name2 name3) )"
+											    	set -f 			#this line disable "globing" which will allow the use to input the character "*" without converting it 
+											    	echo "Enter the field: (e.g (name1 name2 name3) )"	#reads the fields name you want to set 
 											    	read -a desired_fields
-											    	echo "Enter the values you want to set: (correspnding to the fields you chose) "
+											    	echo "Enter the values you want to set: (correspnding to the fields you chose) "	#reads an array of values corresponding to the desired fields
 											    	read -a value
                                                     unset pk_arr
                                                     unset pk_tmp
-                                                    pk_tmp=(`grep "^PK" constraints_files/$table_name`)
-                                                    IFS=':' read -ra pk_arr <<< ${pk_tmp[@]}
-											    	declare -a last_fields
-											    	unset last_fields[@] #the column numbers which will be passed to the awk
+                                                    pk_tmp=(`grep "^PK" constraints_files/$table_name`)		#gets the pk line from the constraint file
+                                                    IFS=':' read -ra pk_arr <<< ${pk_tmp[@]}			#creating the pk_arr by removing the seprator ":"
+											    	declare -a last_fields		
+											    	unset last_fields[@] 		#the column numbers which will be passed to the awk
 											    	unset all_fileds[@]
-											    	IFS=':' read -ra all_fields < $table_name
-											    	if [[ ${#desired_fields[@]} -eq 0 || "${desired_fields[0]}" == '*' ]]  #update the whole table if he entered nothing or "*"
+											    	IFS=':' read -ra all_fields < $table_name	#stors the names of the columns in the array all_fields
+											    	if [[ ${#desired_fields[@]} -eq 0 || "${desired_fields[0]}" == '*' ]]	  #update the whole table if he entered nothing or "*"
 											    	then
 											    		for((i=0;i<${#all_fields[@]};i++))
 											    		do
 											    			last_fields=("${last_fields[@]}" "$(($i+1))") 
 											    		done
-											    		IFS=':' read -ra desired_fields < $table_name #retrive allfields into desired fields
-											    		echo ${last_fields[@]}
+											    		IFS=':' read -ra desired_fields < $table_name 		#retrive allfields into desired fields
 											    		found=true
 											    	else       # for specifing some of the columns
 											    		for ((i=0;i<${#desired_fields[@]};i++))
                     				                   	do
-                    				                       	found=false
+                    				                       	found=false		#sets a variable found to false to check when he finds the corresponding column
                     				                       	for ((j=0;j<${#all_fields[@]};j++))
                     				                       	do
                     				                           	if [[ ${desired_fields[i]} == ${all_fields[j]} ]]
@@ -382,7 +381,7 @@ do
                     				                               	found=true
                     				                           	fi
                     				                       	done
-                    				                       	if [[ $found == false ]]
+                    				                       	if [[ $found == false ]]		#if the entered name wasn't found in the columns
                     				                       	then
                     				                          	echo "${desired_fields[i]} not found "
                     				                           	break
@@ -391,14 +390,14 @@ do
 											    	fi
 											    	declare -a const
 											    	unset const
-                    						        IFS=':' read -ra const < constraints_files/$table_name 	#read attributes from file
+                    						        IFS=':' read -ra const < constraints_files/$table_name 	#read constraints from file
 											    	right_datatype=true
-											    	echo ${last_fields[@]}
-											    	echo $const[@]
-											    	echo ${const[(($last_fields-1))]}
+											    	
+											    	
+											    	
 											    	for ((i=0;i<${#last_fields[@]};i++ ))
 											    	do
-											    		if [[ ${const[((${last_fields[$i]}-1))]} == "int" ]]
+											    		if [[ ${const[((${last_fields[$i]}-1))]} == "int" ]]		#checks if the field constraint is int to compare it to the input value
                     						           	then
                     						        	    if [[ ${value[i]} =~ ^[0-9]+$ ]]
                     						        	    then
@@ -407,7 +406,8 @@ do
                     						        	        echo "wrong data type of the column"
                     						        	        right_datatype=false
                     						        	    fi
-                    						           	elif  [[ ${const[((${last_fields[$i]}-1))]} == "char" ]]
+                    						           	elif  [[ ${const[((${last_fields[$i]}-1))]} == "char" ]]		#checks if the field constraint is character to compare it to the input value
+                    						           	
                     						           	then
                     						               if [[ ${value[i]} =~ ^[0-9]*\.?[0-9]+$ ]]
                     						               then
@@ -416,7 +416,8 @@ do
                     						               else
                     						                   echo "alpha"
                     						               fi
-                    						           	elif [[ ${const[((${last_fields[$i]}-1))]} == "float" ]]
+                    						           	elif [[ ${const[((${last_fields[$i]}-1))]} == "float" ]]		#checks if the field constraint is float to compare it to the input value
+                    						           
                     						           	then
                     						               if [[ ${value[i]} =~ ^[0-9]*\.?[0-9]+$ ]]
                     						               then
@@ -426,40 +427,40 @@ do
                     						                   right_datatype=false
                     						               fi
                     						           	fi
-											    		if [[ ${last_fields[$i]} -eq $((${pk_arr[2]}+1)) ]]
+											    		if [[ ${last_fields[$i]} -eq $((${pk_arr[2]}+1)) ]]		#checks if you are setting a value to a primary key 
                     		                            then
-                    		                               if [[ ${value[i]} == "" ]]
+                    		                               if [[ ${value[i]} == "" ]]		#if the value is NULL
                     		                               then
                     		                                    echo "didin't enter the primary key ${pk_arr[1]}"
 							                                    right_datatype=false
                     		                                    break
                     		                               else
-                    		                                   cut -d: -f"$((${pk_arr[2]}+1))" $table_name | grep -q "${value[i]}"
+                    		                                   cut -d: -f"$((${pk_arr[2]}+1))" $table_name | grep -q "${value[i]}"		#makes sure the value you want to set is unique across the primary key column
                     		                                   if [[ $? -eq 0 ]]
                     		                                   then
-                    		                                           echo "id( primary key ) already exists"
+                    		                                           echo " ${pk_arr[2]} already exists"
 								                                        right_datatype=false
                     		                                           break
                     		                                   else
-                    		                                   echo "coreect pk val"
+                    		                                   echo "coreect pk value"
                     		                                   fi
                     		                               fi
                     		                            else
                     		    	                        echo "not pk " 
                     		                            fi
 											    	done
-											    	set +f #re-enabling globing
+											    	set +f		 #re-enabling globing
 											    	if [[ $found == true && $right_datatype == true ]]
 											    	then
-                    			                       	condition=""
+                    			                       	condition=""		#sets the condition variable to empty string
                     			                       	declare condition_arr
                     			                       	unset condition_arr
-                    			                       	echo "Enter the condition (e.g., salary >= 5000):"
+                    			                       	echo "Enter the condition (e.g., salary >= 5000):"		#reads the condition from the user
                     			                       	read -a condition_arr
                     			                       	condition_flag=false
                     			                       	unset all_fileds[@]
-                    			                       	IFS=':' read -ra all_fields < $table_name
-                    			                       	if [[ ${#condition_arr[@]} -ne 0  ]]
+                    			                       	IFS=':' read -ra all_fields < $table_name			#stores the names of the table fields in the all_fields array
+                    			                       	if [[ ${#condition_arr[@]} -ne 0  ]]		#if the user didn't enter a condition 
                     			                       	then
                     			                           	for ((j=0;j<${#all_fields[@]};j++))
                     			                           	do
@@ -473,7 +474,7 @@ do
                     			                           	then
                     			                                echo "${condition_arr[0]} not found in table"
                     			                           	fi
-                    			                            echo "$condition  ${condition_arr[@]}"
+                    			                            
                     			                           	if [[ ${condition_arr[1]} == "=" ]]
                     			                           	then
                     			                                condition_arr[1]="=="
@@ -481,40 +482,38 @@ do
 											    	    else
                     						                echo "condition_arr is empty"
                     						            fi
-                    						            condition_f="\$$condition ${condition_arr[1]} ${condition_arr[2]}"
-											    		index=$(IFS=,; echo "${last_fields[*]}") #serialization into one string to pass it to the awk then we will split it inside of the awk
-                    						            desired_fields_s=$(IFS=,; echo "${desired_fields[*]}")
+                    						            condition_f="\$$condition ${condition_arr[1]} ${condition_arr[2]}"		#assemble the condition to pass it to the awk 
 											    		for((i=0;i<${#last_fields[@]};i++ ))
 											    		do
-											    		awk -F: '{if (NR==1) print$0 ; if(NR!=1 && '"$condition_f"') {OFS=FS; $'"${last_fields[$i]}"'="'"${value[$i]}"'" ;print$0 } else if(NR!=1) {print $0}}' $table_name  > temp && mv temp  $table_name
+											    		awk -F: '{if (NR==1) print$0 ; if(NR!=1 && '"$condition_f"') {OFS=FS; $'"${last_fields[$i]}"'="'"${value[$i]}"'" ;print$0 } else if(NR!=1) {print $0}}' $table_name  > temp && mv temp  $table_name 		#updating the table content
 											    		done
 											    	fi
                                                 fi
                     						    ;;
                                         8) 
-                                            #back
-                                            cd /home/$USER/bash-project
-                                            back_flag=false
+                                            #returns back to the database menu
+                                            cd /home/$USER/bash-project		#changes the directory to the directory containing the databases
+                                            back_flag=false			#sets the back flag to false to exit the inner loop
                                             clear
                                             ;;
                                         9)
-                                            #exiting
-                                            cd /home/$USER/bash-project
-                                            back_flag=false
-                                            exit_flag=false
+                                            #exits the program
+                                            cd /home/$USER/bash-project		#changes the directory to the directory containing the databases
+                                            back_flag=false			#sets the back flag to false to exit the inner loop
+                                            exit_flag=false			#sets the exit flag to false to exit the outer loop
                                             ;;
-                                        *) echo " choose a number from 1 to 9 "
+                                        *) echo " choose a number from 1 to 9 "		#makes sure the input is valid between 1 to 9
                                            ;;
                                 esac
                         done
-                    else
+                    else	#if database is not found
                         echo "database not found"
                         ClicktoClear
                     fi
                     ;;
-                4) echo "choosed $choice" #drops db
-                        read -p "enter the name of the db you want to delete : " db_del
-                        if [[ -e $db_del ]]
+                4) 	#drop the database		
+                        read -p "enter the name of the db you want to delete : " db_del		#reads the database name to delete
+                        if [[ -e $db_del ]]	#checks if there is a database with this name
                         then
                             rm -rf /home/$USER/bash-project/$db_del
                             echo "$db_del has been deleted successfully !!"
@@ -523,9 +522,9 @@ do
                         fi
                         ClicktoClear
                         ;;
-                5) exit_flag=false
+                5) exit_flag=false				#exit program
                         ;;
-                *) echo "choose a number from 1 to 5"
+                *) echo "choose a number from 1 to 5"		#makes sure the user input is from 1 to 5
                         ClicktoClear
                         ;;
         esac
