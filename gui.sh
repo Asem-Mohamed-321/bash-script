@@ -584,7 +584,8 @@ do
                 fi
                         ;;
                 "4)drop database") echo "choosed $choice" #drops db
-			db_del=$(zenity --entry --title="drop database" --text="Enter the name of the db you want to delete :")
+			cd /home/$USER/bash-project/
+   			db_del=$(zenity --entry --title="drop database" --text="Enter the name of the db you want to delete :")
                         #read -p "enter the name of the db you want to delete : " db_del
                         if [[ -e $db_del ]]
                         then
