@@ -8,6 +8,7 @@ clear
 
 while $flag
 do
+	flag2=true
 	choice=$(zenity --list --height=500 --title="Our DBMS" --column="CHOOSE AN OPERATION>" "1)create database" "2)list database" "3)connect to database" "4)drop database" "exit")
 
 	#echo "--------------------------------------"
@@ -393,7 +394,7 @@ do
                                                 	#set -x
 							condition_f="\$$condition ${condition_arr[1]} ${condition_arr[2]}"
 							echo $condition_f
-							zenity --info   --title="Select From Table" --text="<tt>`awk -F: -v fields="$index" -v headline="$desired_fields_s" -v total_length=15 -v fields_count="$f_count" 'BEGIN {printf "%s", "+";for(j=0;j<fields_count;j++){for(i=0;i<15;i++) {printf "%s","-"};printf"+"}; print""; printf "|" ;split(headline, h, ",") ;for (i in h) {padding=total_length-length(h[i]);right=int(padding/2);left=padding-right; printf "%*s%s%*s|",left, "", h[i],right,"" };print""; printf "%s", "+"; for(j=0;j<fields_count;j++){for(i=0;i<15;i++) {printf "%s","-"};printf"+"}; print""} { if ( NR != 1 && '"$condition_f"' ) { printf "%s", "|"; split(fields, f, ",") ; for (i in f) {padding=total_length-length($f[i]);right=int(padding/2);left=padding-right; printf "%*s%s%*s|",left, "", $f[i],right,"" } ; print"" } }  END{printf "%s","+" ;for(j=0;j<fields_count;j++){for(i=0;i<15;i++) {printf "%s","-"};printf"+"}; print""}' "$table_name" `</tt>" 
+							zenity --info   --title="Select From Table" --width=300 --text="<tt>`awk -F: -v fields="$index" -v headline="$desired_fields_s" -v total_length=15 -v fields_count="$f_count" 'BEGIN {printf "%s", "+";for(j=0;j<fields_count;j++){for(i=0;i<15;i++) {printf "%s","-"};printf"+"}; print""; printf "|" ;split(headline, h, ",") ;for (i in h) {padding=total_length-length(h[i]);right=int(padding/2);left=padding-right; printf "%*s%s%*s|",left, "", h[i],right,"" };print""; printf "%s", "+"; for(j=0;j<fields_count;j++){for(i=0;i<15;i++) {printf "%s","-"};printf"+"}; print""} { if ( NR != 1 && '"$condition_f"' ) { printf "%s", "|"; split(fields, f, ",") ; for (i in f) {padding=total_length-length($f[i]);right=int(padding/2);left=padding-right; printf "%*s%s%*s|",left, "", $f[i],right,"" } ; print"" } }  END{printf "%s","+" ;for(j=0;j<fields_count;j++){for(i=0;i<15;i++) {printf "%s","-"};printf"+"}; print""}' "$table_name" `</tt>" 
                                                 	#set +x
 
 
@@ -466,7 +467,7 @@ do
 						desired_fields=$(zenity --entry --title="Update Table" --text="enter the fields : \nthe format should be (name1 name2 name3)")
                                                 IFS=" " read -ra desired_fields <<< "$desired_fields"
 						value=$(zenity --entry --title="Update Table" --text="Enter the value to set :")
-						IFS=" " read -ra desired_fields <<< "$desired_fields"
+						IFS=" " read -ra value <<< "$value"
 
 						#echo "Enter the values you want to set: (correspnding to the fields you chose) "
 						#read -a value
@@ -639,12 +640,12 @@ do
 						fi
                                                 ;;
 					"8) back")
-                                                cd - 
+                                                cd /home/$USER/bash-project/
                                                 flag2=false
                                                 clear
                                                 ;;
 					"9) exit")
-                                                cd -
+                                                cd /home/$USER/bash-project/
                                                 flag2=false
                                                 flag=false
                                                 ;;
