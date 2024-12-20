@@ -227,14 +227,14 @@ do
 											    	declare -a last_fields
 											    	unset last_fields[@]                #the column numbers which will be passed to the awk
 											    	unset all_fileds[@]
-											    	IFS=':' read -ra all_fields < $table_name
+											    	IFS=':' read -ra all_fields < $table_name       #reads table attributes and pass it to all_fields array
 											    	if [[ ${#desired_fields[@]} -eq 0 || "${desired_fields[0]}" == '*' ]]  #view the whole table if he entered nothing or "*"
 											    	then
-											    		for((i=0;i<${#all_fields[@]};i++))
+                                                        #pass all_fields to last_fields array(contain column numbers) which will be displayed
+											    		for ((i=0;i<${#all_fields[@]};i++))
 											    		do
 											    			last_fields=("${last_fields[@]}" "$(($i+1))")
 											    			IFS=':' read -ra desired_fields < $table_name
-
 											    		done
 											    		found=true
 											    	else       # for specifing some of the columns
@@ -243,9 +243,9 @@ do
                     						            	found=false
                     						            	for ((j=0;j<${#all_fields[@]};j++))
                     						            	do
-                    						                    	if [[ ${desired_fields[i]} == ${all_fields[j]}  ]]
+                    						                    	if [[ ${desired_fields[i]} == ${all_fields[j]}  ]]  #retrive desired fields column names from all fields even if the order is not equal to their order in the table
                     						                    	then
-                    						                            last_fields=("${last_fields[@]}" "$(($j+1))")
+                    						                            last_fields=("${last_fields[@]}" "$(($j+1))")   #append to array last fields the column numbers
                     						                            found=true
                     						                    	fi
                     						            	done
@@ -257,31 +257,31 @@ do
                     						            done
 											    	fi
 											    	set +f #re-enabling globing
+                                                    #desired fields is found in the table 
 											    	if [[ $found == true ]]
 											    	then
-											    		declare condition_arr
+											    		declare -a condition_arr
 											    		unset condition_arr
 											    		condition=""
 											    		echo "Enter the condition (e.g., salary > 5000):"
-                    						            read -a condition_arr
-											    		condition_flag=false
-											    		if [[ ${#condition_arr[@]} -ne 0  ]]
+                    						            read -a condition_arr       #reading condition from user
+											    		condition_flag=false        #check if condition valid (attribute name is valid)
+											    		if [[ ${#condition_arr[@]} -ne 0  ]]    #no condition
                     						            then
 											    			for ((j=0;j<${#all_fields[@]};j++))
                     		                           		do
-                    		                                    if [[ ${condition_arr[0]} == ${all_fields[$j]} ]]
+                    		                                    if [[ ${condition_arr[0]} == ${all_fields[$j]} ]]   #checks if condiiton exists in table attributes
                     		                                    then
 											    					condition=$(($j+1))
 											    					condition_flag=true
 											    					break
                     						                    fi
                     						                done
-											    			if [[ $condition_flag == false ]]
+											    			if [[ $condition_flag == false ]]       #condition attribute name not found in table attributes
                     	                                    then
                     	                                            echo "${condition_arr[0]} not found in table"
                     	                                    fi
-											    			echo "$condition  ${condition_arr[@]}"
-											    			if [[ ${condition_arr[1]} == "=" ]]
+											    			if [[ ${condition_arr[1]} == "=" ]]     #make sure the condiiton is ready dor the awk 
 											    			then
 											    				condition_arr[1]="=="
 											    			fi
@@ -290,31 +290,32 @@ do
 											    			condition=0
 
                     						            fi
-											    		index=$(IFS=,; echo "${last_fields[*]}") #serialization into one string to pass it to the awk then we will split it inside of the awk
-                    		                        	desired_fields_s=$(IFS=,; echo "${desired_fields[*]}")
-                    		                        	f_count=${#desired_fields[@]}
-											    		condition_f="\$$condition ${condition_arr[1]} ${condition_arr[2]}"
+											    		index=$(IFS=,; echo "${last_fields[*]}")                #serialization into one string to pass it to the awk then we will split it inside of the awk
+                    		                        	desired_fields_s=$(IFS=,; echo "${desired_fields[*]}")  
+                    		                        	f_count=${#desired_fields[@]}                           #used to structure the displayed table heading to be dynamic
+											    		condition_f="\$$condition ${condition_arr[1]} ${condition_arr[2]}"  #make the condition on teh formula "ex: $5 > 5000" so teh awk can check with it 
 											    		echo $condition_f
+                                                        #best awk u will ever imagine dynamically shows table
 											    		awk -F: -v fields="$index" -v headline="$desired_fields_s" -v total_length=15 -v fields_count="$f_count" 'BEGIN {printf "%s", "+";for(j=0;j<fields_count;j++){for(i=0;i<15;i++) {printf "%s","-"};printf"+"}; print""; printf "|" ;split(headline, h, ",") ;for (i in h) {padding=total_length-length(h[i]);right=int(padding/2);left=padding-right; printf "%*s%s%*s|",left, "", h[i],right,"" };print""; printf "%s", "+"; for(j=0;j<fields_count;j++){for(i=0;i<15;i++) {printf "%s","-"};printf"+"}; print""} { if ( NR != 1 && '"$condition_f"' ) { printf "%s", "|"; split(fields, f, ",") ; for (i in f) {padding=total_length-length($f[i]);right=int(padding/2);left=padding-right; printf "%*s%s%*s|",left, "", $f[i],right,"" } ; print"" } }  END{printf "%s","+" ;for(j=0;j<fields_count;j++){for(i=0;i<15;i++) {printf "%s","-"};printf"+"}; print""}' "$table_name" 
 											    	fi
                                                 fi
                     						    ClicktoClear
                     						    ;;
-                                        6) echo "$db_action"	#delete
-												read -p "Enter the  Table name : " table_name
-                                                if [[ ! -e $table_name ]]
+                                        6) 	#delete from table
+												read -p "Enter the  Table name : " table_name		#reads the table name
+                                                if [[ ! -e $table_name ]]		#checks if the table exists in the database
                                                 then
                                                 echo "table doesn't exist !!"
                                                 else
-                                                    condition=""
+                                                    condition=""		#resets the condition to an empty string
 											    	declare condition_arr
                 					    	        unset condition_arr
-											    	echo "Enter the condition (e.g., salary >= 5000):"
+											    	echo "Enter the condition (e.g., salary >= 5000):"		#reads the condition from the user 
                 					    	        read -a condition_arr
                 					    	        condition_flag=false
 											    	unset all_fileds[@]
-                		                            IFS=':' read -ra all_fields < $table
-                		                            if [[ ${#condition_arr[@]} -ne 0  ]]
+                		                            IFS=':' read -ra all_fields < $table		#storing the name of the fields in the all_fields array
+                		                            if [[ ${#condition_arr[@]} -ne 0  ]]		#checks if the user didn't enter any condition
 											    	then
                 							    		for ((j=0;j<${#all_fields[@]};j++))
                 					                    do
@@ -328,7 +329,6 @@ do
                 					                    then
                 					                        echo "${condition_arr[0]} not found in table"
                 					                    fi
-                					                    echo "$condition  ${condition_arr[@]}"
                 					                    if [[ ${condition_arr[1]} == "=" ]]
 											    		then	
                 					    	            condition_arr[1]="=="
@@ -336,8 +336,8 @@ do
                 				                    else
                 				                        echo "condition_arr is empty"
                 				                    fi
-											    	condition_f="\$$condition ${condition_arr[1]} ${condition_arr[2]}"
-											    	awk -F: '{if (NR==1) print$0 ; if(NR!=1 && !('"$condition_f"')) print$0 }' $table_name  > temp && mv temp  $table_name 
+											    	condition_f="\$$condition ${condition_arr[1]} ${condition_arr[2]}"		#passing the condition as a string to the awk
+											    	awk -F: '{if (NR==1) print$0 ; if(NR!=1 && !('"$condition_f"')) print$0 }' $table_name  > temp && mv temp  $table_name 		#deleteing the data from the table
                 					            fi
                                                 ;;
                                         7) 	#update table 
