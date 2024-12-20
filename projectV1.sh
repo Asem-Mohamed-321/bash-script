@@ -159,7 +159,7 @@ do
 													then
 														if [[ $element =~ ^[0-9]+$ || $element == "" ]]
 														then
-															echo "Number"
+															:
 														else
 															break
 														fi
@@ -169,13 +169,13 @@ do
                                         	            then
                                         	                    break
                                         	            else
-                                        	                    echo "alpha"
+                                        	                    :
                                         	            fi
 													elif [[ ${const[$i]} == "float" ]]
                             					    then
                             					        if [[ $element =~ ^[0-9]*\.?[0-9]+$ || $element == "" ]]
                             					        then
-                            					                echo "float"
+                            					                :
                             					        else
                             					                break 
 														fi
@@ -401,7 +401,7 @@ do
                     						           	then
                     						        	    if [[ ${value[i]} =~ ^[0-9]+$ ]]
                     						        	    then
-                    						        	        echo "Number"
+                    						        	        :
                     						        	    else
                     						        	        echo "wrong data type of the column"
                     						        	        right_datatype=false
@@ -414,14 +414,14 @@ do
                     						                   echo "wrong data type of the column"
                     						                   right_datatype=false
                     						               else
-                    						                   echo "alpha"
+                    						                   :
                     						               fi
                     						           	elif [[ ${const[((${last_fields[$i]}-1))]} == "float" ]]		#checks if the field constraint is float to compare it to the input value
                     						           
                     						           	then
                     						               if [[ ${value[i]} =~ ^[0-9]*\.?[0-9]+$ ]]
                     						               then
-                    						                   echo "float"
+                    						                   :
                     						               else
                     						                   echo "wrong data type of the column"
                     						                   right_datatype=false
@@ -442,11 +442,9 @@ do
 								                                        right_datatype=false
                     		                                           break
                     		                                   else
-                    		                                   echo "coreect pk value"
                     		                                   fi
                     		                               fi
                     		                            else
-                    		    	                        echo "not pk " 
                     		                            fi
 											    	done
 											    	set +f		 #re-enabling globing
