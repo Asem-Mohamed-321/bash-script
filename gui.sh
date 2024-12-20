@@ -8,7 +8,7 @@ clear
 
 while $flag
 do
-	choice=$(zenity --list --title="Our DBMS" --column="CHOOSE AN OPERATION" "1)create database" "2)list database" "3)connect to database" "4)drop database" "exit")
+	choice=$(zenity --list --height=500 --title="Our DBMS" --column="CHOOSE AN OPERATION>" "1)create database" "2)list database" "3)connect to database" "4)drop database" "exit")
 
 	#echo "--------------------------------------"
         #echo "1)create database "
@@ -48,7 +48,7 @@ do
                                 clear
                                 while $flag2
                                 do
-					db_action=$(zenity --list --title="$db_name database" --column="CHOOSE AN OPERATION" "1) Create Table" "2) List Tables" "3) Drop Table" "4) Insert into Table" "5) Select from Table" "6) Delee from Table" "7) Update Table" "8) back" "9) exit")
+					db_action=$(zenity --list --height=500 --title="$db_name database" --column="CHOOSE AN OPERATION" "1) Create Table" "2) List Tables" "3) Drop Table" "4) Insert into Table" "5) Select from Table" "6) Delee from Table" "7) Update Table" "8) back" "9) exit")
 
                                 	#echo "----------$db_name database-----------"
                                         #echo "1) Create Table"
@@ -80,6 +80,8 @@ do
 								#constraints
 								declare -a const	#constraints
 								declare -a att		#attributes
+								declare -a pk_arr       #Primary key 
+                                                                unset pk_arr
 								unset const
 								unset att
 								#const[0]=$table_name
@@ -106,11 +108,24 @@ do
 									#((i++))
 
 								done
+								pk_arr="PK"
+								pk_name=$(zenity --entry --title="Create table" --text="Enter the Primary key attribute name: ")
+                                                                for ((i=0;i<${#att[@]};i++))
+                                                                do
+                                                                        if [[ $pk_name == ${att[$i]} ]]
+                                                                        then
+                                                                                pk_arr[1]=${att[$i]}
+                                                                                pk_arr[2]=$i
+                                                                        fi
+                                                                done
+                                                                
 								echo $(IFS=:; echo "${att[*]}") >> $table_name
-								echo $(IFS=:; echo "${const[*]}") > constraints_files/$table_name
-								echo $(IFS=:; echo "${att[*]}") >> constraints_files/$table_name
-								#cat constraints_files/$table_name
-                                                                #echo "table created successfully !!"
+                                                                echo $(IFS=:; echo "${const[*]}") > constraints_files/$table_name
+                                                                echo $(IFS=:; echo "${att[*]}") >> constraints_files/$table_name
+                                                                echo $(IFS=:; echo "${pk_arr[*]}") >> constraints_files/$table_name
+
+
+                                                                zenity --info --text="table created successfully !!"
                                                         fi
                                                         #ClicktoClear
                                                 ;;
@@ -144,8 +159,17 @@ do
                                                 if [[ -e $table_name ]]
                                                 then
 							declare -a array
+                                                        declare -a pktmp
+                                                        declare -a  pk_arr
+                                                        unset pk_arr
+                                                        unset pk_tmp
+
                                                 	unset array[@]
 							unset const
+
+							pk_tmp=(`grep "^PK" constraints_files/$table_name`)
+							IFS=':' read -ra pk_arr <<< ${pk_tmp[@]}
+
                                                 	IFS=':' read -ra all_fields < $table_name 	#read attributes from file
                                                 	#temp=`tail -n 1 constraints_files/$table_name`
                                                 	IFS=':' read -ra const < constraints_files/$table_name 	#read attributes from file
@@ -203,9 +227,29 @@ do
 									#	;;
 									#esac
 								fi
+								if [[ ${all_fields[i]} == ${pk_arr[1]} ]]
+                                                                then
+                                                                        if [[ $element == "" ]]
+                                                                        then
+                                                                                zenity --info --text="didin't enter the primary key ${pk_arr[1]}"
+                                                                                break
+                                                                        else
+                                                                                cut -d: -f"$((${pk_arr[2]}+1))"  $table_name | grep -q "$element"
+                                                                                if [[ $? -eq 0 ]]
+                                                                                then
+                                                                                        zenity --info --text="id( primary key ) already exists"
+                                                                                        break
+                                                                                else
+                                                                                array[$i]=$element
+                                                                                fi
+                                                                        fi
+                                                                else
+                                                                        array[$i]=$element
+                                                                fi
+
 								#array=("${array[@]}"":$element")
         	                                        
-								array[$i]=$element
+								#array[$i]=$element
 							done
 
 							#set +x
@@ -402,6 +446,7 @@ do
 							fi
 
                                                 else
+							condition=0
                                                         echo "condition_arr is empty"
                                                         #condition_flag=false
                                                 fi
@@ -414,18 +459,25 @@ do
 						table_name=$(zenity --entry --title="Update Table" --text="Enter the table name :")
 						#read -p "Enter the  Table name : " table_name
 						unset desired_fields
-						set -f #this line disable "globing" which will allow the use to input the character "*" without converting it 
+						unset value
+						set -f #this line disable "globing" which will allow the use to input the character "*" without converting it
+						#echo "Enter the field: (e.g (name1 name2 name3) )"
+						#read -a desired_fields
 						desired_fields=$(zenity --entry --title="Update Table" --text="enter the fields : \nthe format should be (name1 name2 name3)")
                                                 IFS=" " read -ra desired_fields <<< "$desired_fields"
-
-						#echo "Enter the field: (e.g (name1 name2 name3) )"
-						
-						#read -a desired_fields
 						value=$(zenity --entry --title="Update Table" --text="Enter the value to set :")
-						#echo "Enter the value you want to set : "
-						#read value
-					
-						
+						IFS=" " read -ra desired_fields <<< "$desired_fields"
+
+						#echo "Enter the values you want to set: (correspnding to the fields you chose) "
+						#read -a value
+						#declare -a pktmp
+                                                #declare -a  pk_arr
+                                                unset pk_arr
+                                                unset pk_tmp
+                                                pk_tmp=(`grep "^PK" constraints_files/$table_name`)
+                                                IFS=':' read -ra pk_arr <<< ${pk_tmp[@]}
+
+
 						declare -a last_fields
 						unset last_fields[@] #the column numbers which will be passed to the awk
 						unset all_fileds[@]
@@ -434,19 +486,21 @@ do
 						then
 							for((i=0;i<${#all_fields[@]};i++))
 							do
+								#if [[ ${pk_arr[2]} -ne $i  ]]
+								#then
 								last_fields=("${last_fields[@]}" "$(($i+1))")
-								IFS=':' read -ra desired_fields < $table_name
-
+								#fi
 							done
+							IFS=':' read -ra desired_fields < $table_name #retrive allfields into desired fields
+							echo ${last_fields[@]}
 							found=true
-
 						else       # for specifing some of the columns
 							for ((i=0;i<${#desired_fields[@]};i++))
                                                 	do
                                                         	found=false
                                                         	for ((j=0;j<${#all_fields[@]};j++))
                                                         	do
-                                                                	if [[ ${desired_fields[i]} == ${all_fields[j]}  ]]
+                                                                	if [[ ${desired_fields[i]} == ${all_fields[j]} ]]
                                                                 	then
                                                                         	#echo $j #debugging
                                                                         	last_fields=("${last_fields[@]}" "$(($j+1))")
@@ -457,56 +511,77 @@ do
                                                                 	if [[ $found == false ]]
                                                                 	then
 										zenity --error --text="${desired_fields[i]} not found "
-										#echo "${desired_fields[i]} not found "
+                                                                        	#echo "${desired_fields[i]} not found "
                                                                         	break
-		
                                                             		fi
                                                 	done
-
-						
 						fi
-						
+
 						declare -a const
 						unset const
                                                 IFS=':' read -ra const < constraints_files/$table_name 	#read attributes from file
 						right_datatype=true
-						#echo $last_fields
-						#echo $const[@]
-						#echo ${const[(($last_fields-1))]}
+						echo ${last_fields[@]}
+						echo $const[@]
+						echo ${const[(($last_fields-1))]}
 
-						if [[ ${const[(($last_fields-1))]} == "int" ]]
-						then
-								if [[ $value =~ ^[0-9]+$ ]]
-								then
-									echo "Number"
-								else
-									zenity --error --text="wrong data type of the column"
-									right_datatype=false
-								fi
-						elif  [[ ${const[(($last_fields-1))]} == "char" ]]
-						then
-								if [[ $value =~ ^[0-9]*\.?[0-9]+$ ]]
+						for ((i=0;i<${#last_fields[@]};i++ ))
+						do
+							if [[ ${const[((${last_fields[i]}-1))]} == "int" ]]
+                                                	then
+                                                                if [[ ${value[i]} =~ ^[0-9]+$ ]]
                                                                 then
-									zenity --error --text="wrong data type of the column"
+                                                                        echo "Number"
+                                                                else
+                                                                        zenity --error --text="wrong data type of the column"
 									#echo "wrong data type of the column"
-									right_datatype=false
+                                                                        right_datatype=false
+                                                                fi
+                                                	elif  [[ ${const[((${last_fields[i]}-1))]} == "char" ]]
+                                                	then
+                                                                if [[ ${value[i]} =~ ^[0-9]*\.?[0-9]+$ ]]
+                                                                then
+                                                                       zenity --error --text="wrong data type of the column"
+									#echo "wrong data type of the column"
+
+                                                                        right_datatype=false
                                                                 else
                                                                         echo "alpha"
-                                                		fi
-						elif [[ ${const[(($last_fields-1))]} == "float" ]]
-                                                then
-                                                                if [[ $value =~ ^[0-9]*\.?[0-9]+$ ]]
+                                                                fi
+                                                	elif [[ ${const[((${last_fields[i]}-1))]} == "float" ]]
+                                                	then
+                                                                if [[ ${value[i]} =~ ^[0-9]*\.?[0-9]+$ ]]
                                                                 then
                                                                         echo "float"
                                                                 else
-                                                                        
-                                                                        zenity --error --text="wrong data type of the column"
-									echo "wrong data type of the column"
-									right_datatype=false
-                                                                        
-								fi
- 
-						fi
+									zenity --error --text="wrong data type of the column"
+                                                                        #echo "wrong data type of the column"
+                                                                        right_datatype=false
+                                                                fi
+                                                	fi
+							if [[ ${last_fields[$i]} -eq $((${pk_arr[2]}+1)) ]]
+                                                                then
+                                                                        if [[ ${value[i]} == "" ]]
+                                                                        then
+                                                                                zenity --error --text="didin't enter the primary key ${pk_arr[1]}"
+										right_datatype=false
+                                                                                break
+                                                                        else
+                                                                                cut -d: -f"$((${pk_arr[2]}+1))" $table_name | grep -q "${value[i]}"
+                                                                                if [[ $? -eq 0 ]]
+                                                                                then
+                                                                                        zenity --error --text="${pk_arr[1]} value already exists"
+											right_datatype=false
+                                                                                        break
+                                                                                else
+                                                                                echo "coreect pk val"
+                                                                                fi
+                                                                        fi
+                                                         else
+                                             	                 echo "not pk "
+                                                         fi
+
+						done
 
 
 						set +f #re-enabling globing
@@ -524,7 +599,6 @@ do
                                                 	#echo "Enter the condition (e.g., salary >= 5000):"
                                                 	#read -a condition_arr
                                                 	condition_flag=false
-
                                                 	unset all_fileds[@]
                                                 	IFS=':' read -ra all_fields < $table_name
 
@@ -543,7 +617,7 @@ do
                                                                 	zenity --error --text="${condition_arr[0]} not found in table"
 
                                                         	fi
-                                                                	#echo "$condition  ${condition_arr[@]}"
+                                                                	echo "$condition  ${condition_arr[@]}"
                                                         	if [[ ${condition_arr[1]} == "=" ]]
                                                         	then
                                                                 	condition_arr[1]="=="
@@ -553,19 +627,19 @@ do
                                                         	#condition_flag=false
                                                 	fi
                                                 	condition_f="\$$condition ${condition_arr[1]} ${condition_arr[2]}"
-									
+
 							index=$(IFS=,; echo "${last_fields[*]}") #serialization into one string to pass it to the awk then we will split it inside of the awk
                                                 	desired_fields_s=$(IFS=,; echo "${desired_fields[*]}")
                                                 	#echo $desired_fields_s #for debugging
 
-
-							awk -F: '{if (NR==1) print$0 ; if(NR!=1 && '"$condition_f"') {OFS=FS; $'"$last_fields"'="'"$value"'" ;print$0 } else if(NR!=1) {print $0}}' $table_name  > temp && mv temp  $table_name
+							for((i=0;i<${#last_fields[@]};i++ ))
+							do
+							awk -F: '{if (NR==1) print$0 ; if(NR!=1 && '"$condition_f"') {OFS=FS; $'"${last_fields[$i]}"'="'"${value[$i]}"'" ;print$0 } else if(NR!=1) {print $0}}' $table_name  > temp && mv temp  $table_name
+							done
 						fi
-
-
                                                 ;;
 					"8) back")
-                                                cd -
+                                                cd - 
                                                 flag2=false
                                                 clear
                                                 ;;
@@ -585,7 +659,7 @@ do
                         ;;
                 "4)drop database") echo "choosed $choice" #drops db
 			cd /home/$USER/bash-project/
-   			db_del=$(zenity --entry --title="drop database" --text="Enter the name of the db you want to delete :")
+			db_del=$(zenity --entry --title="drop database" --text="Enter the name of the db you want to delete :")
                         #read -p "enter the name of the db you want to delete : " db_del
                         if [[ -e $db_del ]]
                         then
