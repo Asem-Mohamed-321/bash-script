@@ -362,13 +362,18 @@ do
                                         ;;
                                         "6) Delee from Table") echo "$db_action"	#delete
 
-						read -p "Enter the  Table name : " table_name
+						
+						table_name=$(zenity --entry --title="Delete From Table" --text="Enter the table name :")
+						#read -p "Enter the  Table name : " table_name
 						condition=""
 						declare condition_arr
                                                 unset condition_arr
                                                 
-						echo "Enter the condition (e.g., salary >= 5000):"
-                                                read -a condition_arr
+						
+						condition_arr=$(zenity --entry --title="Delete From Table" --text="Enter the condition : \nthe format shoulc be (e.g., salary > 5000) ")
+						IFS=" " read -ra condition_arr <<< "$condition_arr"
+						#echo "Enter the condition (e.g., salary >= 5000):"
+                                                #read -a condition_arr
                                                 condition_flag=false
 
 						unset all_fileds[@]
@@ -386,10 +391,11 @@ do
                                                         done
 							if [[ $condition_flag == false ]]
                                                         then
-                                                        	echo "${condition_arr[0]} not found in table"
+                                                        	zenity --error --text="${condition_arr[0]} not found in table"
+                                                        	#echo "${condition_arr[0]} not found in table"
                                                             
                                                         fi
-                                                                echo "$condition  ${condition_arr[@]}"
+                                                                #echo "$condition  ${condition_arr[@]}"
                                                 	if [[ ${condition_arr[1]} == "=" ]]
 							then	
                                                         	condition_arr[1]="=="
@@ -405,13 +411,19 @@ do
 
                                                 ;;
                                         "7) Update Table") echo "$db_action"	#update
-						read -p "Enter the  Table name : " table_name
+						table_name=$(zenity --entry --title="Update Table" --text="Enter the table name :")
+						#read -p "Enter the  Table name : " table_name
 						unset desired_fields
 						set -f #this line disable "globing" which will allow the use to input the character "*" without converting it 
-						echo "Enter the field: (e.g (name1 name2 name3) )"
-						read -a desired_fields
-						echo "Enter the value you want to set : "
-						read value
+						desired_fields=$(zenity --entry --title="Update Table" --text="enter the fields : \nthe format should be (name1 name2 name3)")
+                                                IFS=" " read -ra desired_fields <<< "$desired_fields"
+
+						#echo "Enter the field: (e.g (name1 name2 name3) )"
+						
+						#read -a desired_fields
+						value=$(zenity --entry --title="Update Table" --text="Enter the value to set :")
+						#echo "Enter the value you want to set : "
+						#read value
 					
 						
 						declare -a last_fields
@@ -444,7 +456,8 @@ do
                                                         	done
                                                                 	if [[ $found == false ]]
                                                                 	then
-                                                                        	echo "${desired_fields[i]} not found "
+										zenity --error --text="${desired_fields[i]} not found "
+										#echo "${desired_fields[i]} not found "
                                                                         	break
 		
                                                             		fi
@@ -457,9 +470,9 @@ do
 						unset const
                                                 IFS=':' read -ra const < constraints_files/$table_name 	#read attributes from file
 						right_datatype=true
-						echo $last_fields
-						echo $const[@]
-						echo ${const[(($last_fields-1))]}
+						#echo $last_fields
+						#echo $const[@]
+						#echo ${const[(($last_fields-1))]}
 
 						if [[ ${const[(($last_fields-1))]} == "int" ]]
 						then
@@ -467,15 +480,15 @@ do
 								then
 									echo "Number"
 								else
-									echo "wrong data type of the column"
+									zenity --error --text="wrong data type of the column"
 									right_datatype=false
 								fi
 						elif  [[ ${const[(($last_fields-1))]} == "char" ]]
 						then
 								if [[ $value =~ ^[0-9]*\.?[0-9]+$ ]]
                                                                 then
-									echo "wrong data type of the column"
-                                                                        
+									zenity --error --text="wrong data type of the column"
+									#echo "wrong data type of the column"
 									right_datatype=false
                                                                 else
                                                                         echo "alpha"
@@ -486,6 +499,8 @@ do
                                                                 then
                                                                         echo "float"
                                                                 else
+                                                                        
+                                                                        zenity --error --text="wrong data type of the column"
 									echo "wrong data type of the column"
 									right_datatype=false
                                                                         
@@ -504,8 +519,10 @@ do
                                                 	declare condition_arr
                                                 	unset condition_arr
 
-                                                	echo "Enter the condition (e.g., salary >= 5000):"
-                                                	read -a condition_arr
+							condition_arr=$(zenity --entry --title="Update Table" --text="Enter the condition : \nthe format shoulc be (e.g., salary > 5000) ")
+                                                	IFS=" " read -ra condition_arr <<< "$condition_arr"
+                                                	#echo "Enter the condition (e.g., salary >= 5000):"
+                                                	#read -a condition_arr
                                                 	condition_flag=false
 
                                                 	unset all_fileds[@]
@@ -523,10 +540,10 @@ do
                                                         	done
                                                         	if [[ $condition_flag == false ]]
                                                         	then
-                                                                	echo "${condition_arr[0]} not found in table"
+                                                                	zenity --error --text="${condition_arr[0]} not found in table"
 
                                                         	fi
-                                                                	echo "$condition  ${condition_arr[@]}"
+                                                                	#echo "$condition  ${condition_arr[@]}"
                                                         	if [[ ${condition_arr[1]} == "=" ]]
                                                         	then
                                                                 	condition_arr[1]="=="
@@ -562,20 +579,21 @@ do
                                 esac
                         done
                 else
-                        echo "database not found"
-                        ClicktoClear
+                        zenity --error --text="database not found"
+                        #ClicktoClear
                 fi
                         ;;
                 "4)drop database") echo "choosed $choice" #drops db
-                        read -p "enter the name of the db you want to delete : " db_del
+			db_del=$(zenity --entry --title="drop database" --text="Enter the name of the db you want to delete :")
+                        #read -p "enter the name of the db you want to delete : " db_del
                         if [[ -e $db_del ]]
                         then
                                 rm -rf /home/$USER/bash-project/$db_del
-                                echo "$db_del has been deleted successfully !!"
+                                zenity --info --title="drop database" --text="$db_del has been deleted successfully !!"
                         else
-                                echo "$db_del not found"
+                                zenity --error --title="drop database" --text="$db_del not found"
                         fi
-                        ClicktoClear
+                        #ClicktoClear
                         ;;
                 "exit") flag=false
                         ;;
