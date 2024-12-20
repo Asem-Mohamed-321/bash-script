@@ -208,14 +208,14 @@ do
 									#esac
 								fi
 								#array=("${array[@]}"":$element")
-        	                                       		if [[ ${all_fields[i]} == ${pk_arr[1]} ]]
+        	                                       		if [[ $i -eq ${pk_arr[2]} ]]
 								then
 									if [[ $element == "" ]]
 									then
 										echo "didin't enter the primary key ${pk_arr[1]}"
 										break
 									else
-										cut -d: -f"$((${pk_arr[2]}+1))"  $table_name | grep -q "$element"
+										cut -d: -f"$((${pk_arr[2]}+1))" $table_name | grep -q "$element"
 										if [[ $? -eq 0 ]]
 										then
 											echo "id( primary key ) already exists"
@@ -417,12 +417,19 @@ do
                                         7) echo "$db_action"	#update
 						read -p "Enter the  Table name : " table_name
 						unset desired_fields
+						unset value
 						set -f #this line disable "globing" which will allow the use to input the character "*" without converting it 
 						echo "Enter the field: (e.g (name1 name2 name3) )"
 						read -a desired_fields
-						echo "Enter the value you want to set : "
-						read value
-					
+						echo "Enter the values you want to set: (correspnding to the fields you chose) "
+						read -a value
+						#declare -a pktmp
+                                                #declare -a  pk_arr
+                                                unset pk_arr
+                                                unset pk_tmp
+                                                pk_tmp=(`grep "^PK" constraints_files/$table_name`)
+                                                IFS=':' read -ra pk_arr <<< ${pk_tmp[@]}
+	
 						
 						declare -a last_fields
 						unset last_fields[@] #the column numbers which will be passed to the awk
@@ -432,19 +439,21 @@ do
 						then
 							for((i=0;i<${#all_fields[@]};i++))
 							do
-								last_fields=("${last_fields[@]}" "$(($i+1))")
-								IFS=':' read -ra desired_fields < $table_name
-
+								#if [[ ${pk_arr[2]} -ne $i  ]]
+								#then
+								last_fields=("${last_fields[@]}" "$(($i+1))") 
+								#fi
 							done
+							IFS=':' read -ra desired_fields < $table_name #retrive allfields into desired fields
+							echo ${last_fields[@]}
 							found=true
-
 						else       # for specifing some of the columns
 							for ((i=0;i<${#desired_fields[@]};i++))
                                                 	do
                                                         	found=false
                                                         	for ((j=0;j<${#all_fields[@]};j++))
                                                         	do
-                                                                	if [[ ${desired_fields[i]} == ${all_fields[j]}  ]]
+                                                                	if [[ ${desired_fields[i]} == ${all_fields[j]} ]]
                                                                 	then
                                                                         	#echo $j #debugging
                                                                         	last_fields=("${last_fields[@]}" "$(($j+1))")
@@ -456,53 +465,73 @@ do
                                                                 	then
                                                                         	echo "${desired_fields[i]} not found "
                                                                         	break
-		
                                                             		fi
                                                 	done
-
-						
 						fi
-						
+
 						declare -a const
 						unset const
                                                 IFS=':' read -ra const < constraints_files/$table_name 	#read attributes from file
 						right_datatype=true
-						echo $last_fields
+						echo ${last_fields[@]}
 						echo $const[@]
 						echo ${const[(($last_fields-1))]}
 
-						if [[ ${const[(($last_fields-1))]} == "int" ]]
-						then
-								if [[ $value =~ ^[0-9]+$ ]]
-								then
-									echo "Number"
-								else
-									echo "wrong data type of the column"
-									right_datatype=false
-								fi
-						elif  [[ ${const[(($last_fields-1))]} == "char" ]]
-						then
-								if [[ $value =~ ^[0-9]*\.?[0-9]+$ ]]
+						for ((i=0;i<${#last_fields[@]};i++ ))
+						do
+							if [[ ${const[((${last_fields[i]}-1))]} == "int" ]]
+                                                	then
+                                                                if [[ ${value[i]} =~ ^[0-9]+$ ]]
                                                                 then
-									echo "wrong data type of the column"
-                                                                        
-									right_datatype=false
+                                                                        echo "Number"
+                                                                else
+                                                                        echo "wrong data type of the column"
+                                                                        right_datatype=false
+                                                                fi
+                                                	elif  [[ ${const[((${last_fields[i]}-1))]} == "char" ]]
+                                                	then
+                                                                if [[ ${value[i]} =~ ^[0-9]*\.?[0-9]+$ ]]
+                                                                then
+                                                                        echo "wrong data type of the column"
+
+                                                                        right_datatype=false
                                                                 else
                                                                         echo "alpha"
-                                                		fi
-						elif [[ ${const[(($last_fields-1))]} == "float" ]]
-                                                then
-                                                                if [[ $value =~ ^[0-9]*\.?[0-9]+$ ]]
+                                                                fi
+                                                	elif [[ ${const[((${last_fields[i]}-1))]} == "float" ]]
+                                                	then
+                                                                if [[ ${value[i]} =~ ^[0-9]*\.?[0-9]+$ ]]
                                                                 then
                                                                         echo "float"
                                                                 else
-									echo "wrong data type of the column"
-									right_datatype=false
-                                                                        
-								fi
- 
-						fi
+                                                                        echo "wrong data type of the column"
+                                                                        right_datatype=false
+                                                                fi
+                                                	fi
+							if [[ ${last_fields[$i]} -eq $((${pk_arr[2]}+1)) ]]
+                                                                then
+                                                                        if [[ ${value[i]} == "" ]]
+                                                                        then
+                                                                                echo "didin't enter the primary key ${pk_arr[1]}"
+										right_datatype=false
+                                                                                break
+                                                                        else
+                                                                                cut -d: -f"$((${pk_arr[2]}+1))" $table_name | grep -q "${value[i]}"
+                                                                                if [[ $? -eq 0 ]]
+                                                                                then
+                                                                                        echo "id( primary key ) already exists"
+											right_datatype=false
+                                                                                        break
+                                                                                else
+                                                                                echo "coreect pk val"
+                                                                                fi
+                                                                        fi
+                                                         else
+                                             	                 echo "not pk " 
+                                                         fi
 
+						done
+				
 
 						set +f #re-enabling globing
 
@@ -517,7 +546,6 @@ do
                                                 	echo "Enter the condition (e.g., salary >= 5000):"
                                                 	read -a condition_arr
                                                 	condition_flag=false
-
                                                 	unset all_fileds[@]
                                                 	IFS=':' read -ra all_fields < $table_name
 
@@ -551,8 +579,11 @@ do
                                                 	desired_fields_s=$(IFS=,; echo "${desired_fields[*]}")
                                                 	#echo $desired_fields_s #for debugging
 
-
-							awk -F: '{if (NR==1) print$0 ; if(NR!=1 && '"$condition_f"') {OFS=FS; $'"$last_fields"'="'"$value"'" ;print$0 } else if(NR!=1) {print $0}}' $table_name  > temp && mv temp  $table_name
+							for((i=0;i<${#last_fields[@]};i++ ))
+							do
+							awk -F: '{if (NR==1) print$0 ; if(NR!=1 && '"$condition_f"') {OFS=FS; $'"${last_fields[$i]}"'="'"${value[$i]}"'" ;print$0 } else if(NR!=1) {print $0}}' $table_name  > temp && mv temp  $table_name
+							done
+							#awk -F: '{if (NR==1) print$0 ; if(NR!=1 && '"$condition_f"') {OFS=FS; $'"$last_fields"'="'"$value"'" ;print$0 } else if(NR!=1) {print $0}}' $table_name  > temp && mv temp  $table_name
 						fi
 
 
