@@ -443,10 +443,8 @@ do
                     		                                           echo " ${pk_arr[2]} already exists"
 								                                        right_datatype=false
                     		                                           break
-                    		                                   else
                     		                                   fi
                     		                               fi
-                    		                            else
                     		                            fi
 											    	done
 											    	set +f		 #re-enabling globing
